@@ -11,13 +11,15 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <memory>
+
+#include "particle_generator.h"
+#include "camera.h"
+
+#define N_KEYS 1024
 
 // Represents the current state of the game
-enum GameState {
-    GAME_ACTIVE,
-    GAME_MENU,
-    GAME_WIN
-};
+enum class GameState { active, menu, win };
 
 // Game holds all game-related state and functionality.
 // Combines all game-related data into a single class for
@@ -25,10 +27,6 @@ enum GameState {
 class Game
 {
 public:
-    // Game state
-    GameState State;
-    GLboolean Keys[1024];
-    GLuint Width, Height;
     // Constructor/Destructor
     Game(GLuint width, GLuint height);
     ~Game();
@@ -38,4 +36,32 @@ public:
     void ProcessInput(GLfloat dt);
     void Update(GLfloat dt);
     void Render();
+
+    void SetState(GameState state) { m_state = state; }
+    void SetKey(size_t key, GLboolean value) { m_keys[key] = value; }
+
+    void SetWidth(GLuint width) { m_width = width; }
+    void SetHeight(GLuint height) { m_height = height; }
+
+    void SetMouseMovement(GLfloat xoffset, GLfloat yoffset);
+    void SetMouseScroll(GLfloat xoffset, GLfloat yoffset);
+
+private:
+    // Game state
+    GameState m_state;
+    GLboolean m_keys[N_KEYS] = {GL_FALSE};
+
+    GLfloat m_mouseXOffset;
+    GLfloat m_mouseYOffset;
+
+    GLfloat m_scrollXOffset;
+    GLfloat m_scrollYOffset;
+
+    GLuint m_width;
+    GLuint m_height;
+
+    Camera m_camera;
+
+    // Game-related State data
+    std::unique_ptr<ParticleGenerator> m_ptrParticles;
 };

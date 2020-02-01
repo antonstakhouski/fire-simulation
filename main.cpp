@@ -13,14 +13,19 @@
 #include "game.h"
 #include "resource_manager.h"
 
-
-// GLFW function declerations
+// GLFW function declarations
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-// The Width of the screen
-const GLuint SCREEN_WIDTH = 800;
-// The height of the screen
-const GLuint SCREEN_HEIGHT = 600;
+const GLuint SCREEN_WIDTH = 1280;
+const GLuint SCREEN_HEIGHT = 720;
+
+// mouse state variables
+GLfloat lastX = SCREEN_WIDTH / 2.0f;
+GLfloat lastY = SCREEN_HEIGHT / 2.0f;
+GLboolean firstMouse = true;
 
 Game Breakout(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -40,6 +45,11 @@ int main(int argc, char *argv[])
     glGetError(); // Call it once to catch glewInit() bug, all other errors are now from our application.
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // OpenGL configuration
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -55,7 +65,7 @@ int main(int argc, char *argv[])
     GLfloat lastFrame = 0.0f;
 
     // Start Game within Menu State
-    Breakout.State = GAME_ACTIVE;
+    Breakout.SetState(GameState::active);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -73,7 +83,7 @@ int main(int argc, char *argv[])
         Breakout.Update(deltaTime);
 
         // Render
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         Breakout.Render();
 
@@ -90,13 +100,46 @@ int main(int argc, char *argv[])
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
     // When a user presses the escape key, we set the WindowShouldClose property to true, closing the application
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+
     if (key >= 0 && key < 1024)
     {
-        if (action == GLFW_PRESS)
-            Breakout.Keys[key] = GL_TRUE;
-        else if (action == GLFW_RELEASE)
-            Breakout.Keys[key] = GL_FALSE;
+        if (action == GLFW_PRESS) {
+            Breakout.SetKey(key, GL_TRUE);
+        }
+        else if (action == GLFW_RELEASE) {
+            Breakout.SetKey(key, GL_FALSE);
+        }
     }
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+    Breakout.SetWidth(width);
+    Breakout.SetHeight(height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    GLfloat xoffset = xpos - lastX;
+    GLfloat yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    Breakout.SetMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Breakout.SetMouseScroll(xoffset, yoffset);
 }
