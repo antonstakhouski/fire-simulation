@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <random>
 #include <vector>
+#include <memory>
 
 #include "shader.h"
 #include "texture.h"
@@ -63,7 +64,7 @@ private:
     // Render state
     Shader m_shader;
     Texture2D m_texture;
-    GLuint m_vao;
+    GLuint m_VAO;
 
     // State
     std::vector<Particle> m_particles;
@@ -76,4 +77,7 @@ private:
 
     // Stores the index of the last particle used (for quick access to next dead particle)
     GLuint m_lastUsedParticle;
+
+    GLuint m_offsetVBO;
+    GLuint m_colorVBO;
 };

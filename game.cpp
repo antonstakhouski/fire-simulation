@@ -11,7 +11,8 @@
 
 #include <iostream>
 
-#define N_PARTICLES 500
+#define N_PARTICLES 5000
+#define N_PTS_PER_FRAME 750
 
 Game::Game(GLuint width, GLuint height)
     : m_state(GameState::active),
@@ -46,19 +47,35 @@ void Game::Init()
 
     // Load textures
     ResourceManager::GetShader("particle").Use().SetInteger("particle", 0);
-    ResourceManager::LoadTexture("textures/fire.png", GL_TRUE, "particle");
+    ResourceManager::LoadTexture("textures/fire_2.png", GL_FALSE, "particle");
 
     m_ptrParticles.reset(
         new ParticleGenerator(ResourceManager::GetShader("particle"),
                               ResourceManager::GetTexture("particle"),
-                              glm::vec3(50, 0, 0), glm::vec3(0, -5, 0), N_PARTICLES));
+                              glm::vec3(20, 0, 0), glm::vec3(0, -5, 0), N_PARTICLES));
+}
+
+void count_fps(GLfloat dt)
+{
+    static GLfloat fTime = 0.0f;
+    static size_t nFrames = 0;
+
+    if (fTime < 1.0f) {
+        fTime += dt;
+        ++nFrames;
+    } else {
+        std::cout << "FPS: " <<  nFrames / fTime << std::endl;
+        fTime = 0.0f;
+        nFrames = 0;
+    }
 }
 
 void Game::Update(GLfloat dt)
 {
+    count_fps(dt);
     // Update particles
     if (m_ptrParticles) {
-        m_ptrParticles->Update(dt, 20);
+        m_ptrParticles->Update(dt, N_PTS_PER_FRAME);
     }
 }
 
@@ -67,19 +84,15 @@ void Game::ProcessInput(GLfloat dt)
     for (size_t key = 0; key < N_KEYS; ++key) {
         if ((key == GLFW_KEY_W) && m_keys[key]) {
             m_camera.ProcessKeyboard(CameraMovement::forward, dt);
-            std::cout << "FORWARD" << std::endl;
         }
         if ((key == GLFW_KEY_S) && m_keys[key]) {
             m_camera.ProcessKeyboard(CameraMovement::backward, dt);
-            std::cout << "BACKFORWARD" << std::endl;
         }
         if ((key == GLFW_KEY_A) && m_keys[key]) {
             m_camera.ProcessKeyboard(CameraMovement::left, dt);
-            std::cout << "LEFT" << std::endl;
         }
         if ((key == GLFW_KEY_D) && m_keys[key]) {
             m_camera.ProcessKeyboard(CameraMovement::right, dt);
-            std::cout << "RIGHT" << std::endl;
         }
     }
 

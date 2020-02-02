@@ -8,6 +8,8 @@
 ******************************************************************/
 #include "particle_generator.h"
 
+#include <iostream>
+
 ParticleGenerator::ParticleGenerator(const Shader& shader,
                                      const Texture2D& texture,
                                      const glm::vec3& position,
@@ -51,18 +53,25 @@ void ParticleGenerator::Draw()
     // Use additive blending to give it a 'glow' effect
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     m_shader.Use();
-    for (Particle particle : m_particles)
-    {
-        if (particle.Life > 0.0f)
-        {
-            m_shader.SetVector3f("offset", particle.Position);
-            m_shader.SetVector4f("color", particle.Color);
-            m_texture.Bind();
-            glBindVertexArray(m_vao);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-            glBindVertexArray(0);
+
+    glm::vec3* ptrOffset = static_cast<glm::vec3*>(glMapNamedBuffer(m_offsetVBO, GL_WRITE_ONLY));
+    glm::vec4* ptrColors = static_cast<glm::vec4*>(glMapNamedBuffer(m_colorVBO, GL_WRITE_ONLY));
+
+    for (size_t i = 0; i < m_amount; ++i) {
+        if (m_particles[i].Life > 0.0f) {
+            ptrOffset[i] = m_particles[i].Position;
+            ptrColors[i] = m_particles[i].Color;
         }
     }
+
+    glUnmapNamedBuffer(m_offsetVBO);
+    glUnmapNamedBuffer(m_colorVBO);
+
+    glBindVertexArray(m_VAO);
+
+    m_texture.Bind();
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, m_amount);
+    glBindVertexArray(0);
     // Don't forget to reset to default blending mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -116,17 +125,17 @@ void ParticleGenerator::Init()
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    glGenVertexArrays(1, &m_vao);
+    glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &VBO);
-    glBindVertexArray(m_vao);
+    glBindVertexArray(m_VAO);
     // Fill mesh buffer
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(particle_cube), particle_cube, GL_STATIC_DRAW);
     // Set mesh attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
 
     glBindVertexArray(0);
 
@@ -138,6 +147,33 @@ void ParticleGenerator::Init()
     glm::mat4 model(1.0f);
     model = glm::translate(model, m_position);
     m_shader.SetMatrix4("model", model);
+
+    // setUp VBOs
+    glGenBuffers(1, &m_offsetVBO);
+    glGenBuffers(1, &m_colorVBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_offsetVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * m_amount, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_colorVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * m_amount, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // setUp VAO
+    glBindVertexArray(m_VAO);
+
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, m_offsetVBO);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(2, 1);
+
+    glEnableVertexAttribArray(3);
+    glBindBuffer(GL_ARRAY_BUFFER, m_colorVBO);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(3, 1);
 }
 
 GLuint ParticleGenerator::FirstUnusedParticle()
@@ -163,8 +199,8 @@ GLuint ParticleGenerator::FirstUnusedParticle()
 
 void ParticleGenerator::RespawnParticle(Particle &particle, const glm::vec3& offset)
 {
-    std::normal_distribution<double> xPosDistriburion(0, 10);
-    std::normal_distribution<double> zPosDistriburion(0, 10);
+    std::normal_distribution<double> xPosDistriburion(0, 0.5f);
+    std::normal_distribution<double> zPosDistriburion(0, 0.5f);
     const glm::vec3 random = {xPosDistriburion(m_rndGenerator), 0.0f,
                               zPosDistriburion(m_rndGenerator)};
 
