@@ -1,7 +1,10 @@
 CC=g++
 
-CXX_FLAGS=-c -std=c++11 -Wall
-LD_FLAGS=-lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lGLEW
+CXX_FLAGS=-c -std=c++11 -Wall \
+	  # -g -O0 \
+	  # -pg
+LD_FLAGS=-lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lGLEW \
+	 # -pg
 
 SOURCES=main.cpp \
 	game.cpp \

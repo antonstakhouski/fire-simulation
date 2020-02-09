@@ -24,18 +24,30 @@ ParticleGenerator::ParticleGenerator(const Shader& shader,
     Init();
 }
 
+// TODO: SLOW
 void ParticleGenerator::Update(GLfloat dt, GLuint newParticles,
                                const glm::vec3& offset)
 {
     // Add new particles
     for (GLuint i = 0; i < newParticles; ++i)
     {
-        int unusedParticle = FirstUnusedParticle();
+        const int64_t res = FirstUnusedParticle();
+
+        size_t unusedParticle = 0;
+        if (res < 0) {
+            std::uniform_int_distribution<size_t> distribution(0, m_amount);
+            unusedParticle = distribution(m_rndGenerator);
+        } else {
+            unusedParticle = static_cast<size_t>(res);
+        }
+
         RespawnParticle(m_particles[unusedParticle], offset);
     }
 
+    m_deadIndexes.clear();
+
     // Update all particles
-    for (GLuint i = 0; i < m_amount; ++i)
+    for (size_t i = 0; i < m_amount; ++i)
     {
         Particle& p = m_particles[i];
         p.Life -= dt; // reduce life
@@ -43,6 +55,8 @@ void ParticleGenerator::Update(GLfloat dt, GLuint newParticles,
         {	// particle is alive, thus update
             p.Position -= p.Velocity * dt;
             p.Color.a = p.Life / p.InitialLife;
+        } else {
+            m_deadIndexes.push_back(i);
         }
     }
 }
@@ -143,6 +157,8 @@ void ParticleGenerator::Init()
     for (GLuint i = 0; i < m_amount; ++i) {
         m_particles.push_back(Particle());
     }
+    // memory consuming but fast and reliable
+    m_deadIndexes.reserve(m_amount);
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, m_position);
@@ -176,25 +192,16 @@ void ParticleGenerator::Init()
     glVertexAttribDivisor(3, 1);
 }
 
-GLuint ParticleGenerator::FirstUnusedParticle()
+// TODO: SLOW
+int64_t ParticleGenerator::FirstUnusedParticle()
 {
-    // First search from last used particle, this will usually return almost instantly
-    for (GLuint i = m_lastUsedParticle; i < m_amount; ++i) {
-        if (m_particles[i].Life <= 0.0f) {
-            m_lastUsedParticle = i;
-            return i;
-        }
+    if (!m_deadIndexes.empty()) {
+        int64_t res = m_deadIndexes.back();
+        m_deadIndexes.pop_back();
+        return res;
+    } else {
+        return -1;
     }
-    // Otherwise, do a linear search
-    for (GLuint i = 0; i < m_lastUsedParticle; ++i) {
-        if (m_particles[i].Life <= 0.0f) {
-            m_lastUsedParticle = i;
-            return i;
-        }
-    }
-    // All particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
-    m_lastUsedParticle = 0;
-    return 0;
 }
 
 void ParticleGenerator::RespawnParticle(Particle &particle, const glm::vec3& offset)
@@ -208,7 +215,7 @@ void ParticleGenerator::RespawnParticle(Particle &particle, const glm::vec3& off
     particle.Position = random + offset;
     particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
 
-    // std::normal_distribution<double> xPosDistriburion(0, 50);
+    // setUp life
     std::normal_distribution<double> lifeDistriburion(3.0, 1.0);
     particle.Life = lifeDistriburion(m_rndGenerator);
     particle.InitialLife = particle.Life;

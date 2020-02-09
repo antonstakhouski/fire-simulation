@@ -57,7 +57,7 @@ private:
     void Init();
     // Returns the first Particle index that's currently unused e.g. Life <=
     // 0.0f or 0 if no particle is currently inactive
-    GLuint FirstUnusedParticle();
+    int64_t FirstUnusedParticle();
     // Respawns particle
     void RespawnParticle(Particle& particle,
                          const glm::vec3& offset = glm::vec3(0.0f));
@@ -68,7 +68,8 @@ private:
 
     // State
     std::vector<Particle> m_particles;
-    const GLuint m_amount;
+    std::vector<size_t> m_deadIndexes;
+    const size_t m_amount;
 
     const glm::vec3 m_position;
     const glm::vec3 m_velocity;
