@@ -16,36 +16,50 @@
 Emitter::Emitter(const Shader& shader,
                  const Texture2D& texture,
                  const glm::vec3& position,
-                 GLfloat fRadius,
-                 const glm::vec3& velocity,
+                 const glm::vec3& direction,
+                 GLfloat radius,
+                 GLfloat energy,
+                 GLfloat velocity,
                  GLuint amount)
     : m_shader(shader),
       m_texture(texture),
       m_amount(amount),
       m_position(position),
-      m_fRadius(fRadius),
-      m_velocity(velocity),
+      m_direction(glm::normalize(direction)),
+      m_radius(radius),
+      m_energy(energy),
+      // emit in direction inverse to movement
+      m_velocity(-velocity),
       m_lastUsedParticle(0)
 {
     Init();
 }
 
+bool Emitter::IsAlive() const
+{
+    return m_energy > 0.0f;
+}
+
 void Emitter::Update(GLfloat dt, GLuint nNewParticles, const glm::vec3& offset)
 {
-    // Add new particles
-    for (GLuint i = 0; i < nNewParticles; ++i)
-    {
-        const int64_t res = FirstUnusedParticle();
+    m_energy -= dt;
 
-        size_t unusedParticle = 0;
-        if (res < 0) {
-            std::uniform_int_distribution<> distribution(0, m_amount);
-            unusedParticle = distribution(m_rndGenerator);
-        } else {
-            unusedParticle = static_cast<size_t>(res);
+    if (IsAlive()) {
+        // Add new particles
+        for (GLuint i = 0; i < nNewParticles; ++i)
+        {
+            const int64_t res = FirstUnusedParticle();
+
+            size_t unusedParticle = 0;
+            if (res < 0) {
+                std::uniform_int_distribution<> distribution(0, m_amount);
+                unusedParticle = distribution(m_rndGenerator);
+            } else {
+                unusedParticle = static_cast<size_t>(res);
+            }
+
+            m_particles[unusedParticle] = GenerateParticle(offset);
         }
-
-        m_particles[unusedParticle] = GenerateParticle(offset);
     }
 
     m_deadIndexes.clear();
@@ -209,13 +223,13 @@ int64_t Emitter::FirstUnusedParticle()
 Particle Emitter::GenerateParticle(const glm::vec3& offset)
 {
     // we set stddev as R / 4
-    std::normal_distribution<> posDistribution(0.0f, m_fRadius / 4);
+    std::normal_distribution<> posDistribution(0.0f, m_radius / 4);
 
     const glm::vec3 random = {posDistribution(m_rndGenerator), 0.0f,
                               posDistribution(m_rndGenerator)};
 
     const glm::vec3 position = random + offset;
-    const glm::vec3 velocity(m_velocity);
+    const glm::vec3 velocity = m_direction * m_velocity;
 
     const GLfloat fColor = 0.5 + ((rand() % 100) / 100.0f);
     const glm::vec4 color(fColor, fColor, fColor, 1.0f);

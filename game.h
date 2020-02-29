@@ -19,14 +19,23 @@
 
 #define N_KEYS 1024
 
+class FPSMeter {
+public:
+    FPSMeter();
+    void Count(GLfloat dt);
+
+private:
+    GLfloat m_time;
+    size_t m_nFrames;
+};
+
 // Represents the current state of the game
 enum class GameState { active, menu, win };
 
 // Game holds all game-related state and functionality.
 // Combines all game-related data into a single class for
 // easy access to each of the components and manageability.
-class Game
-{
+class Game {
 public:
     // Constructor/Destructor
     Game(GLuint width, GLuint height);
@@ -66,4 +75,6 @@ private:
     // Game-related State data
     std::unique_ptr<Emitter> m_ptrParticles;
     std::default_random_engine m_rndGenerator;
+
+    FPSMeter m_fpsMeter;
 };

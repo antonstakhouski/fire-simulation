@@ -28,8 +28,10 @@ public:
     Emitter(const Shader& shader,
             const Texture2D& texture,
             const glm::vec3& position,
-            GLfloat fRadius,
-            const glm::vec3& velocity,
+            const glm::vec3& direction,
+            GLfloat radius,
+            GLfloat energy,
+            GLfloat velocity,
             GLuint amount);
 
     // TODO: pass Object that is on fire here
@@ -38,6 +40,7 @@ public:
                 const glm::vec3& offset = glm::vec3(0.0f));
     // Render all particles
     void Draw();
+    bool IsAlive() const;
 
 private:
     // Initializes buffer and vertex attributes
@@ -58,8 +61,10 @@ private:
     const size_t m_amount;
 
     const glm::vec3 m_position;
-    const GLfloat m_fRadius;
-    const glm::vec3 m_velocity;
+    const glm::vec3 m_direction;
+    const GLfloat m_radius;
+    GLfloat m_energy;
+    const GLfloat m_velocity;
 
     // Stores the index of the last particle used (for quick access to next dead particle)
     GLuint m_lastUsedParticle;

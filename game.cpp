@@ -11,9 +11,29 @@
 
 #include <iostream>
 
-#define N_RADIUS 10
+#define ENERGY 5.0f
+#define RADIUS 10.0f
 #define N_PARTICLES 50000
 #define N_BURST_RATE 1000
+
+// FPSMeter {{{
+FPSMeter::FPSMeter()
+    : m_time(0.0f),
+      m_nFrames(0)
+{}
+
+void FPSMeter::Count(GLfloat dt)
+{
+    if (m_time < 1.0f) {
+        m_time += dt;
+        ++m_nFrames;
+    } else {
+        std::cout << "FPS: " <<  m_nFrames / m_time << std::endl;
+        m_time = 0.0f;
+        m_nFrames = 0;
+    }
+}
+// }}}
 
 Game::Game(GLuint width, GLuint height)
     : m_state(GameState::active),
@@ -56,30 +76,16 @@ void Game::Init()
         new Emitter(ResourceManager::GetShader("particle"),
                     ResourceManager::GetTexture("particle"),
                     glm::vec3(20, 0, 0),
-                    N_RADIUS,
-                    // TODO: declare velocity as float
-                    glm::vec3(0, -5, 0),
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    RADIUS,
+                    ENERGY,
+                    5,
                     N_PARTICLES));
-}
-
-void count_fps(GLfloat dt)
-{
-    static GLfloat fTime = 0.0f;
-    static size_t nFrames = 0;
-
-    if (fTime < 1.0f) {
-        fTime += dt;
-        ++nFrames;
-    } else {
-        std::cout << "FPS: " <<  nFrames / fTime << std::endl;
-        fTime = 0.0f;
-        nFrames = 0;
-    }
 }
 
 void Game::Update(GLfloat dt)
 {
-    count_fps(dt);
+    m_fpsMeter.Count(dt);
     // Update particles
     if (m_ptrParticles) {
         const size_t nDeviation = N_BURST_RATE * 0.2f;
