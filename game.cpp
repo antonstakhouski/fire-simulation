@@ -11,8 +11,9 @@
 
 #include <iostream>
 
-#define N_PARTICLES 5000
-#define N_PTS_PER_FRAME 750
+#define N_RADIUS 10
+#define N_PARTICLES 50000
+#define N_BURST_RATE 1000
 
 Game::Game(GLuint width, GLuint height)
     : m_state(GameState::active),
@@ -20,7 +21,9 @@ Game::Game(GLuint width, GLuint height)
       m_mouseYOffset(0.0f),
       m_width(width),
       m_height(height),
-      m_camera(glm::vec3(0.0f, 0.0f, 3.0f))
+      m_camera(glm::vec3(0.0f, 0.0f, 3.0f),
+               glm::vec3(0.0f, 1.0f, 0.0f),
+               -10.0f)
 {
 }
 
@@ -50,9 +53,13 @@ void Game::Init()
     ResourceManager::LoadTexture("textures/fire_2.png", GL_FALSE, "particle");
 
     m_ptrParticles.reset(
-        new ParticleGenerator(ResourceManager::GetShader("particle"),
-                              ResourceManager::GetTexture("particle"),
-                              glm::vec3(20, 0, 0), glm::vec3(0, -5, 0), N_PARTICLES));
+        new Emitter(ResourceManager::GetShader("particle"),
+                    ResourceManager::GetTexture("particle"),
+                    glm::vec3(20, 0, 0),
+                    N_RADIUS,
+                    // TODO: declare velocity as float
+                    glm::vec3(0, -5, 0),
+                    N_PARTICLES));
 }
 
 void count_fps(GLfloat dt)
@@ -75,7 +82,10 @@ void Game::Update(GLfloat dt)
     count_fps(dt);
     // Update particles
     if (m_ptrParticles) {
-        m_ptrParticles->Update(dt, N_PTS_PER_FRAME);
+        const size_t nDeviation = N_BURST_RATE * 0.2f;
+        std::uniform_int_distribution<> distribution(N_BURST_RATE - nDeviation,
+                                                     N_BURST_RATE + nDeviation);
+        m_ptrParticles->Update(dt, distribution(m_rndGenerator));
     }
 }
 

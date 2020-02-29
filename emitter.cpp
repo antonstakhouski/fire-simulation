@@ -6,63 +6,63 @@
 ** Creative Commons, either version 4 of the License, or (at your
 ** option) any later version.
 ******************************************************************/
-#include "particle_generator.h"
+#include "emitter.h"
 
 #include <iostream>
 
-ParticleGenerator::ParticleGenerator(const Shader& shader,
-                                     const Texture2D& texture,
-                                     const glm::vec3& position,
-                                     const glm::vec3& velocity, GLuint amount)
+#define LIFE_MEAN 3.0f
+#define LIFE_DEVATION 1.0f
+
+Emitter::Emitter(const Shader& shader,
+                 const Texture2D& texture,
+                 const glm::vec3& position,
+                 GLfloat fRadius,
+                 const glm::vec3& velocity,
+                 GLuint amount)
     : m_shader(shader),
       m_texture(texture),
       m_amount(amount),
       m_position(position),
+      m_fRadius(fRadius),
       m_velocity(velocity),
       m_lastUsedParticle(0)
 {
     Init();
 }
 
-// TODO: SLOW
-void ParticleGenerator::Update(GLfloat dt, GLuint newParticles,
-                               const glm::vec3& offset)
+void Emitter::Update(GLfloat dt, GLuint nNewParticles, const glm::vec3& offset)
 {
     // Add new particles
-    for (GLuint i = 0; i < newParticles; ++i)
+    for (GLuint i = 0; i < nNewParticles; ++i)
     {
         const int64_t res = FirstUnusedParticle();
 
         size_t unusedParticle = 0;
         if (res < 0) {
-            std::uniform_int_distribution<size_t> distribution(0, m_amount);
+            std::uniform_int_distribution<> distribution(0, m_amount);
             unusedParticle = distribution(m_rndGenerator);
         } else {
             unusedParticle = static_cast<size_t>(res);
         }
 
-        RespawnParticle(m_particles[unusedParticle], offset);
+        m_particles[unusedParticle] = GenerateParticle(offset);
     }
 
     m_deadIndexes.clear();
 
+    // TODO:
     // Update all particles
     for (size_t i = 0; i < m_amount; ++i)
     {
         Particle& p = m_particles[i];
-        p.Life -= dt; // reduce life
-        if (p.Life > 0.0f)
-        {	// particle is alive, thus update
-            p.Position -= p.Velocity * dt;
-            p.Color.a = p.Life / p.InitialLife;
-        } else {
+        if (!p.Update(dt)) {
             m_deadIndexes.push_back(i);
         }
     }
 }
 
 // Render all particles
-void ParticleGenerator::Draw()
+void Emitter::Draw()
 {
     // Use additive blending to give it a 'glow' effect
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -72,9 +72,9 @@ void ParticleGenerator::Draw()
     glm::vec4* ptrColors = static_cast<glm::vec4*>(glMapNamedBuffer(m_colorVBO, GL_WRITE_ONLY));
 
     for (size_t i = 0; i < m_amount; ++i) {
-        if (m_particles[i].Life > 0.0f) {
-            ptrOffset[i] = m_particles[i].Position;
-            ptrColors[i] = m_particles[i].Color;
+        if (m_particles[i].IsAlive()) {
+            ptrOffset[i] = m_particles[i].GetPosition();
+            ptrColors[i] = m_particles[i].GetColor();
         }
     }
 
@@ -90,7 +90,7 @@ void ParticleGenerator::Draw()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void ParticleGenerator::Init()
+void Emitter::Init()
 {
     // Set up mesh and attribute properties
     GLuint VBO;
@@ -153,12 +153,14 @@ void ParticleGenerator::Init()
 
     glBindVertexArray(0);
 
+    // memory consuming but fast and reliable
+    m_particles.reserve(m_amount);
+    m_deadIndexes.reserve(m_amount);
+
     // Create this->amount default particle instances
     for (GLuint i = 0; i < m_amount; ++i) {
         m_particles.push_back(Particle());
     }
-    // memory consuming but fast and reliable
-    m_deadIndexes.reserve(m_amount);
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, m_position);
@@ -192,8 +194,7 @@ void ParticleGenerator::Init()
     glVertexAttribDivisor(3, 1);
 }
 
-// TODO: SLOW
-int64_t ParticleGenerator::FirstUnusedParticle()
+int64_t Emitter::FirstUnusedParticle()
 {
     if (!m_deadIndexes.empty()) {
         int64_t res = m_deadIndexes.back();
@@ -204,21 +205,23 @@ int64_t ParticleGenerator::FirstUnusedParticle()
     }
 }
 
-void ParticleGenerator::RespawnParticle(Particle &particle, const glm::vec3& offset)
+// can't be const, ca'z modifies m_rndGenerator
+Particle Emitter::GenerateParticle(const glm::vec3& offset)
 {
-    std::normal_distribution<double> xPosDistriburion(0, 0.5f);
-    std::normal_distribution<double> zPosDistriburion(0, 0.5f);
-    const glm::vec3 random = {xPosDistriburion(m_rndGenerator), 0.0f,
-                              zPosDistriburion(m_rndGenerator)};
+    // we set stddev as R / 4
+    std::normal_distribution<> posDistribution(0.0f, m_fRadius / 4);
 
-    GLfloat rColor = 0.5 + ((rand() % 100) / 100.0f);
-    particle.Position = random + offset;
-    particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
+    const glm::vec3 random = {posDistribution(m_rndGenerator), 0.0f,
+                              posDistribution(m_rndGenerator)};
 
-    // setUp life
-    std::normal_distribution<double> lifeDistriburion(3.0, 1.0);
-    particle.Life = lifeDistriburion(m_rndGenerator);
-    particle.InitialLife = particle.Life;
+    const glm::vec3 position = random + offset;
+    const glm::vec3 velocity(m_velocity);
 
-    particle.Velocity = m_velocity;
+    const GLfloat fColor = 0.5 + ((rand() % 100) / 100.0f);
+    const glm::vec4 color(fColor, fColor, fColor, 1.0f);
+
+    std::normal_distribution<> lifeDistriburion(LIFE_MEAN, LIFE_DEVATION);
+    const GLfloat fLife = lifeDistriburion(m_rndGenerator);
+
+    return Particle(position, velocity, color, fLife);
 }

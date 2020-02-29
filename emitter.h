@@ -15,39 +15,26 @@
 #include <vector>
 #include <memory>
 
+#include "particle.h"
 #include "shader.h"
 #include "texture.h"
 
-// Represents a single particle and its state
-struct Particle {
-    glm::vec3 Position, Velocity;
-    glm::vec4 Color;
-    GLfloat Life;
-    GLfloat InitialLife;
-
-    Particle()
-        : Position(0.0f),
-          Velocity(0.0f),
-          Color(1.0f),
-          Life(0.0f),
-          InitialLife(0.0f)
-    {
-    }
-};
-
-// ParticleGenerator acts as a container for rendering a large number of
+// Emitter acts as a container for rendering a large number of
 // particles by repeatedly spawning and updating particles and killing
 // them after a given amount of time.
-class ParticleGenerator {
+class Emitter {
 public:
     // Constructor
-    ParticleGenerator(const Shader& shader, const Texture2D& texture,
-                      const glm::vec3& position, const glm::vec3& velocity,
-                      GLuint amount);
+    Emitter(const Shader& shader,
+            const Texture2D& texture,
+            const glm::vec3& position,
+            GLfloat fRadius,
+            const glm::vec3& velocity,
+            GLuint amount);
 
     // TODO: pass Object that is on fire here
     // Update all particles
-    void Update(GLfloat dt, GLuint newParticles,
+    void Update(GLfloat dt, GLuint nNewParticles,
                 const glm::vec3& offset = glm::vec3(0.0f));
     // Render all particles
     void Draw();
@@ -58,9 +45,8 @@ private:
     // Returns the first Particle index that's currently unused e.g. Life <=
     // 0.0f or 0 if no particle is currently inactive
     int64_t FirstUnusedParticle();
-    // Respawns particle
-    void RespawnParticle(Particle& particle,
-                         const glm::vec3& offset = glm::vec3(0.0f));
+    Particle GenerateParticle(const glm::vec3& offset);
+
     // Render state
     Shader m_shader;
     Texture2D m_texture;
@@ -72,13 +58,14 @@ private:
     const size_t m_amount;
 
     const glm::vec3 m_position;
+    const GLfloat m_fRadius;
     const glm::vec3 m_velocity;
-
-    std::default_random_engine m_rndGenerator;
 
     // Stores the index of the last particle used (for quick access to next dead particle)
     GLuint m_lastUsedParticle;
 
     GLuint m_offsetVBO;
     GLuint m_colorVBO;
+
+    std::default_random_engine m_rndGenerator;
 };

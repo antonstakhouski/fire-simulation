@@ -12,9 +12,10 @@
 #include <GLFW/glfw3.h>
 
 #include <memory>
+#include <random>
 
-#include "particle_generator.h"
 #include "camera.h"
+#include "emitter.h"
 
 #define N_KEYS 1024
 
@@ -63,5 +64,6 @@ private:
     Camera m_camera;
 
     // Game-related State data
-    std::unique_ptr<ParticleGenerator> m_ptrParticles;
+    std::unique_ptr<Emitter> m_ptrParticles;
+    std::default_random_engine m_rndGenerator;
 };
