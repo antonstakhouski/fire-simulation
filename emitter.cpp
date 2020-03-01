@@ -13,6 +13,9 @@
 #define LIFE_MEAN 3.0f
 #define LIFE_DEVATION 1.0f
 
+#define SCALE_MEAN 0.05f
+#define SCALE_DEVIATION 0.025f
+
 Emitter::Emitter(const Shader& shader,
                  const Texture2D& texture,
                  const glm::vec3& position,
@@ -84,16 +87,19 @@ void Emitter::Draw()
 
     glm::vec3* ptrOffset = static_cast<glm::vec3*>(glMapNamedBuffer(m_offsetVBO, GL_WRITE_ONLY));
     glm::vec4* ptrColors = static_cast<glm::vec4*>(glMapNamedBuffer(m_colorVBO, GL_WRITE_ONLY));
+    GLfloat* ptrScale = static_cast<GLfloat*>(glMapNamedBuffer(m_scaleVBO, GL_WRITE_ONLY));
 
     for (size_t i = 0; i < m_amount; ++i) {
         if (m_particles[i].IsAlive()) {
             ptrOffset[i] = m_particles[i].GetPosition();
             ptrColors[i] = m_particles[i].GetColor();
+            ptrScale[i] = m_particles[i].GetScale();
         }
     }
 
     glUnmapNamedBuffer(m_offsetVBO);
     glUnmapNamedBuffer(m_colorVBO);
+    glUnmapNamedBuffer(m_scaleVBO);
 
     glBindVertexArray(m_VAO);
 
@@ -183,12 +189,16 @@ void Emitter::Init()
     // setUp VBOs
     glGenBuffers(1, &m_offsetVBO);
     glGenBuffers(1, &m_colorVBO);
+    glGenBuffers(1, &m_scaleVBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_offsetVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * m_amount, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_colorVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * m_amount, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_scaleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * m_amount, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -206,6 +216,12 @@ void Emitter::Init()
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(3, 1);
+
+    glEnableVertexAttribArray(4);
+    glBindBuffer(GL_ARRAY_BUFFER, m_scaleVBO);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 1 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(4, 1);
 }
 
 int64_t Emitter::FirstUnusedParticle()
@@ -237,5 +253,8 @@ Particle Emitter::GenerateParticle(const glm::vec3& offset)
     std::normal_distribution<> lifeDistriburion(LIFE_MEAN, LIFE_DEVATION);
     const GLfloat fLife = lifeDistriburion(m_rndGenerator);
 
-    return Particle(position, velocity, color, fLife);
+    std::normal_distribution<> scaleDistriburion(SCALE_MEAN, SCALE_DEVIATION);
+    const GLfloat fScale = scaleDistriburion(m_rndGenerator);
+
+    return Particle(position, velocity, color, fLife, fScale);
 }

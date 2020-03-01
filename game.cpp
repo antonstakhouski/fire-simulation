@@ -11,7 +11,8 @@
 
 #include <iostream>
 
-#define ENERGY 5.0f
+// TODO: replace this hack
+#define ENERGY 500.0f
 #define RADIUS 10.0f
 #define N_PARTICLES 50000
 #define N_BURST_RATE 1000

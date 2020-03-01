@@ -1,12 +1,14 @@
 #include "particle.h"
 
 Particle::Particle(const glm::vec3& position, const glm::vec3& velocity,
-                   const glm::vec4& color, GLfloat fLife)
+                   const glm::vec4& color, GLfloat fLife, GLfloat fScale)
     : m_position(position),
       m_velocity(velocity),
       m_color(color),
       m_fLife(fLife),
-      m_fInitialLife(m_fLife)
+      m_fScale(fScale),
+      m_fInitialLife(m_fLife),
+      m_fInitialScale(m_fScale)
 {
 }
 
@@ -20,6 +22,11 @@ const glm::vec4& Particle::GetColor() const
     return m_color;
 }
 
+GLfloat Particle::GetScale() const
+{
+    return m_fScale;
+}
+
 bool Particle::IsAlive()
 {
     return m_fLife > 0.0f;
@@ -28,6 +35,11 @@ bool Particle::IsAlive()
 void Particle::UpdateColor()
 {
     m_color.a = m_fLife / m_fInitialLife;
+}
+
+void Particle::UpdateScale()
+{
+    m_fScale = m_fInitialScale * (m_fLife / m_fInitialLife);
 }
 
 void Particle::UpdatePosition(GLfloat dt)
@@ -42,6 +54,7 @@ bool Particle::Update(GLfloat dt)
     if (IsAlive()) {
         // particle is alive, thus update
         UpdateColor();
+        UpdateScale();
         UpdatePosition(dt);
         return true;
     }

@@ -71,6 +71,7 @@ private:
 
     GLuint m_offsetVBO;
     GLuint m_colorVBO;
+    GLuint m_scaleVBO;
 
     std::default_random_engine m_rndGenerator;
 };
