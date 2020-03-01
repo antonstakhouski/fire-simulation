@@ -15,7 +15,7 @@
 #define ENERGY 500.0f
 #define RADIUS 10.0f
 #define N_PARTICLES 50000
-#define N_BURST_RATE 1000
+#define N_BURST_RATE 3000
 
 // FPSMeter {{{
 FPSMeter::FPSMeter()
@@ -80,7 +80,7 @@ void Game::Init()
                     glm::vec3(0.0f, 1.0f, 0.0f),
                     RADIUS,
                     ENERGY,
-                    5,
+                    7,
                     N_PARTICLES));
 }
 

@@ -23,9 +23,11 @@ private:
     void UpdateColor();
     void UpdateScale();
     void UpdatePosition(GLfloat dt);
+    void UpdateVelocity();
 
     glm::vec3 m_position;
     glm::vec3 m_velocity;
+    glm::vec3 m_acceleration;
     glm::vec4 m_color;
     GLfloat m_fLife;
     GLfloat m_fScale;

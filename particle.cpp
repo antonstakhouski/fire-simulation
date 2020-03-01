@@ -1,9 +1,12 @@
 #include "particle.h"
 
+#include <iostream>
+
 Particle::Particle(const glm::vec3& position, const glm::vec3& velocity,
                    const glm::vec4& color, GLfloat fLife, GLfloat fScale)
     : m_position(position),
-      m_velocity(velocity),
+      m_velocity(-velocity),
+      m_acceleration(glm::normalize(m_velocity) * 0.1f),
       m_color(color),
       m_fLife(fLife),
       m_fScale(fScale),
@@ -44,7 +47,12 @@ void Particle::UpdateScale()
 
 void Particle::UpdatePosition(GLfloat dt)
 {
-    m_position -= m_velocity * dt;
+    m_position += m_velocity * dt;
+}
+
+void Particle::UpdateVelocity()
+{
+    m_velocity += m_acceleration;
 }
 
 bool Particle::Update(GLfloat dt)
@@ -56,6 +64,7 @@ bool Particle::Update(GLfloat dt)
         UpdateColor();
         UpdateScale();
         UpdatePosition(dt);
+        UpdateVelocity();
         return true;
     }
     else {
