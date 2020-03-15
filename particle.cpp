@@ -1,6 +1,9 @@
 #include "particle.h"
 
 #include <iostream>
+#include <algorithm>
+
+#include <glm/gtx/vector_angle.hpp>
 
 Particle::Particle(const glm::vec3& position, const glm::vec3& velocity,
                    const glm::vec4& color, GLfloat fLife, GLfloat fScale)
@@ -50,12 +53,24 @@ void Particle::UpdatePosition(GLfloat dt)
     m_position += m_velocity * dt;
 }
 
-void Particle::UpdateVelocity()
+void Particle::UpdateVelocity(const std::vector<glm::vec3>& pressurePoints)
 {
-    m_velocity += m_acceleration;
+    const auto& iter = std::upper_bound(
+        pressurePoints.begin(), pressurePoints.end(), m_position,
+        [](const auto& a, const auto& b) {
+        return (glm::length(a) < glm::length(b)) && (a.y < b.y); });
+
+    if (iter != pressurePoints.end()) {
+        m_velocity =
+            glm::length(m_velocity) * glm::normalize(*iter - m_position) +
+            glm::length(m_acceleration);
+    }
+    else {
+        m_velocity += m_acceleration;
+    }
 }
 
-bool Particle::Update(GLfloat dt)
+bool Particle::Update(GLfloat dt, const std::vector<glm::vec3>& pressurePoints)
 {
     // can be the cause of underflow
     m_fLife -= dt;
@@ -64,7 +79,7 @@ bool Particle::Update(GLfloat dt)
         UpdateColor();
         UpdateScale();
         UpdatePosition(dt);
-        UpdateVelocity();
+        UpdateVelocity(pressurePoints);
         return true;
     }
     else {

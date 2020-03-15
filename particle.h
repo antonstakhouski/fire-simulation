@@ -4,6 +4,8 @@
 
 #include <glm/glm.hpp>
 
+#include <vector>
+
 // Represents a single particle and its state
 class Particle {
 public:
@@ -13,7 +15,7 @@ public:
              GLfloat fLife = 0.0f,
              GLfloat fScale = 0.0f);
 
-    bool Update(GLfloat dt);
+    bool Update(GLfloat dt, const std::vector<glm::vec3>& m_pressurePoints);
     const glm::vec3& GetPosition() const;
     const glm::vec4& GetColor() const;
     GLfloat GetScale() const;
@@ -23,7 +25,7 @@ private:
     void UpdateColor();
     void UpdateScale();
     void UpdatePosition(GLfloat dt);
-    void UpdateVelocity();
+    void UpdateVelocity(const std::vector<glm::vec3>& pressurePoints);
 
     glm::vec3 m_position;
     glm::vec3 m_velocity;

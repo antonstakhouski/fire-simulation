@@ -49,6 +49,7 @@ private:
     // 0.0f or 0 if no particle is currently inactive
     int64_t FirstUnusedParticle();
     Particle GenerateParticle(const glm::vec3& offset);
+    glm::vec3 GetLPPoint();
 
     // Render state
     Shader m_shader;
@@ -57,6 +58,7 @@ private:
 
     // State
     std::vector<Particle> m_particles;
+    std::vector<glm::vec3> m_lowPressure;
     std::vector<size_t> m_deadIndexes;
     const size_t m_amount;
 

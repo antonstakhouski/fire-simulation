@@ -9,6 +9,9 @@
 #include "emitter.h"
 
 #include <iostream>
+#include <algorithm>
+
+#define N_LOW_P_POINTS 100
 
 #define LIFE_MEAN 3.0f
 #define LIFE_DEVATION 1.0f
@@ -67,15 +70,37 @@ void Emitter::Update(GLfloat dt, GLuint nNewParticles, const glm::vec3& offset)
 
     m_deadIndexes.clear();
 
+    // Update low pressure points
+    // for (GLuint i = 0; i < N_LOW_P_POINTS; ++i) {
+    //     m_lowPressure[i] = GetLPPoint();
+    // }
+    std::sort(m_lowPressure.begin(), m_lowPressure.end(),
+              [](const auto& a, const auto& b) {
+                  return (glm::length(a) < glm::length(b)) && (a.y < b.y);
+              });
+
     // TODO:
     // Update all particles
     for (size_t i = 0; i < m_amount; ++i)
     {
         Particle& p = m_particles[i];
-        if (!p.Update(dt)) {
+        if (!p.Update(dt, m_lowPressure)) {
             m_deadIndexes.push_back(i);
         }
     }
+}
+
+glm::vec3 Emitter::GetLPPoint()
+{
+    std::uniform_int_distribution<> x_distribution(m_position.x - m_radius,
+                                                   m_position.x + m_radius);
+    std::uniform_int_distribution<> y_distribution(m_position.y + 1,
+                                                   m_position.y + 20);
+    std::uniform_int_distribution<> z_distribution(m_position.z - m_radius,
+                                                   m_position.z + m_radius);
+    return glm::vec3(x_distribution(m_rndGenerator),
+                     y_distribution(m_rndGenerator),
+                     z_distribution(m_rndGenerator));
 }
 
 // Render all particles
@@ -180,6 +205,11 @@ void Emitter::Init()
     // Create this->amount default particle instances
     for (GLuint i = 0; i < m_amount; ++i) {
         m_particles.push_back(Particle());
+    }
+
+    m_lowPressure.reserve(N_LOW_P_POINTS);
+    for (GLuint i = 0; i < N_LOW_P_POINTS; ++i) {
+        m_lowPressure.push_back(GetLPPoint());
     }
 
     glm::mat4 model(1.0f);
