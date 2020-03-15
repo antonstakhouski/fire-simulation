@@ -11,7 +11,7 @@
 #include <iostream>
 #include <algorithm>
 
-#define N_LOW_P_POINTS 100
+#define N_LOW_P_POINTS 500
 
 #define LIFE_MEAN 3.0f
 #define LIFE_DEVATION 1.0f
@@ -92,15 +92,14 @@ void Emitter::Update(GLfloat dt, GLuint nNewParticles, const glm::vec3& offset)
 
 glm::vec3 Emitter::GetLPPoint()
 {
-    std::uniform_int_distribution<> x_distribution(m_position.x - m_radius,
-                                                   m_position.x + m_radius);
-    std::uniform_int_distribution<> y_distribution(m_position.y + 1,
-                                                   m_position.y + 20);
-    std::uniform_int_distribution<> z_distribution(m_position.z - m_radius,
-                                                   m_position.z + m_radius);
-    return glm::vec3(x_distribution(m_rndGenerator),
+    std::normal_distribution<> xz_distribution(0.0f, m_radius / 1.5);
+    std::normal_distribution<> y_distribution(0.0f, 20.0f / 4);
+    // std::normal_distribution<> xz_distribution(0.0f, m_radius / 4);
+    // std::uniform_int_distribution<> y_distribution(m_position.y + 1,
+    //                                                m_position.y + 20);
+    return glm::vec3(xz_distribution(m_rndGenerator),
                      y_distribution(m_rndGenerator),
-                     z_distribution(m_rndGenerator));
+                     xz_distribution(m_rndGenerator));
 }
 
 // Render all particles
