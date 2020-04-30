@@ -14,8 +14,8 @@
 // TODO: replace this hack
 #define ENERGY 500.0f
 #define RADIUS 3.0f
-#define N_PARTICLES 5000 * 2.5
-#define N_BURST_RATE 300 * 2.5
+#define N_PARTICLES 5000 * 1.5
+#define N_BURST_RATE 300 * 1.5
 
 // FPSMeter {{{
 FPSMeter::FPSMeter()
@@ -86,13 +86,15 @@ void Game::Init()
 
 void Game::Update(GLfloat dt)
 {
+    static int nCnt = 0;
     m_fpsMeter.Count(dt);
     // Update particles
-    if (m_ptrParticles) {
+    if (m_ptrParticles && nCnt < 2000) {
         const size_t nDeviation = N_BURST_RATE * 0.2f;
         std::uniform_int_distribution<> distribution(N_BURST_RATE - nDeviation,
                                                      N_BURST_RATE + nDeviation);
         m_ptrParticles->Update(dt, distribution(m_rndGenerator));
+        ++nCnt;
     }
 }
 

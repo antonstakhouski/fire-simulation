@@ -13,6 +13,11 @@
 
 #define N_LOW_P_POINTS 500
 
+#define Y_OFFSET 0.4f
+
+#define VELOCITY_LOW 0.5f
+#define VELOCITY_HIGH 1.5f
+
 #define LIFE_MEAN 3.0f
 #define LIFE_DEVATION 1.0f
 
@@ -269,12 +274,16 @@ Particle Emitter::GenerateParticle(const glm::vec3& offset)
 {
     // we set stddev as R / 4
     std::normal_distribution<> posDistribution(0.0f, m_radius / 4);
+    std::uniform_real_distribution yDistribution(0.0f, Y_OFFSET);
 
-    const glm::vec3 random = {posDistribution(m_rndGenerator), 0.0f,
+    const glm::vec3 random = {posDistribution(m_rndGenerator), yDistribution(m_rndGenerator),
                               posDistribution(m_rndGenerator)};
 
+    std::uniform_real_distribution velocityDistribution(VELOCITY_LOW, VELOCITY_HIGH);
+    const GLfloat velocityFactor = velocityDistribution(m_rndGenerator);
+
     const glm::vec3 position = random + offset;
-    const glm::vec3 velocity = m_direction * m_velocity;
+    const glm::vec3 velocity = m_direction * m_velocity * velocityFactor;
 
     const GLfloat fColor = 0.5 + ((rand() % 100) / 100.0f);
     const glm::vec4 color(fColor, fColor, fColor, 1.0f);
