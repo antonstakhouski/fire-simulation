@@ -21,8 +21,8 @@
 #define LIFE_MEAN 3.0f
 #define LIFE_DEVATION 1.0f
 
-#define SCALE_MEAN 0.05f
-#define SCALE_DEVIATION 0.025f
+#define SCALE_MEAN 0.30f
+#define SCALE_DEVIATION 0.15f
 
 Emitter::Emitter(const Shader& shader,
                  const Texture2D& texture,
@@ -132,7 +132,7 @@ void Emitter::Draw()
     glBindVertexArray(m_VAO);
 
     m_texture.Bind();
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, m_amount);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, m_amount);
     glBindVertexArray(0);
     // Don't forget to reset to default blending mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -150,41 +150,6 @@ void Emitter::Init()
         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-       -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-       -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-       -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-       -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-       -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-       -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-       -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-       -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-       -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-       -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-       -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
     glGenVertexArrays(1, &m_VAO);

@@ -14,8 +14,8 @@
 // TODO: replace this hack
 #define ENERGY 500.0f
 #define RADIUS 3.0f
-#define N_PARTICLES 5000 * 1.0
-#define N_BURST_RATE 300 * 1.0
+#define N_PARTICLES 5000 * 1.50
+#define N_BURST_RATE 300 * 0.75
 
 // FPSMeter {{{
 FPSMeter::FPSMeter()
@@ -71,7 +71,7 @@ void Game::Init()
 
     // Load textures
     ResourceManager::GetShader("particle").Use().SetInteger("particle", 0);
-    ResourceManager::LoadTexture("textures/fire_2.png", GL_FALSE, "particle");
+    ResourceManager::LoadTexture("textures/fire.png", GL_TRUE, "particle");
 
     m_ptrParticles.reset(
         new Emitter(ResourceManager::GetShader("particle"),
