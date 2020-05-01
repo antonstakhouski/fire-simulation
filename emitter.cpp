@@ -40,8 +40,7 @@ Emitter::Emitter(const Shader& shader,
       m_radius(radius),
       m_energy(energy),
       // emit in direction inverse to movement
-      m_velocity(-velocity),
-      m_lastUsedParticle(0)
+      m_velocity(-velocity)
 {
     Init();
 }

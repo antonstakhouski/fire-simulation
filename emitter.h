@@ -68,9 +68,6 @@ private:
     GLfloat m_energy;
     const GLfloat m_velocity;
 
-    // Stores the index of the last particle used (for quick access to next dead particle)
-    GLuint m_lastUsedParticle;
-
     GLuint m_offsetVBO;
     GLuint m_colorVBO;
     GLuint m_scaleVBO;
