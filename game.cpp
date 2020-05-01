@@ -14,8 +14,8 @@
 // TODO: replace this hack
 #define ENERGY 500.0f
 #define RADIUS 3.0f
-#define N_PARTICLES 5000 * 1.5
-#define N_BURST_RATE 300 * 1.5
+#define N_PARTICLES 5000 * 1.0
+#define N_BURST_RATE 300 * 1.0
 
 // FPSMeter {{{
 FPSMeter::FPSMeter()

@@ -9,7 +9,7 @@ Particle::Particle(const glm::vec3& position, const glm::vec3& velocity,
                    const glm::vec4& color, GLfloat fLife, GLfloat fScale)
     : m_position(position),
       m_velocity(-velocity),
-      m_acceleration(glm::normalize(m_velocity) * 0.1f),
+      m_acceleration(glm::normalize(m_velocity) * 0.02f),
       m_color(color),
       m_fLife(fLife),
       m_fScale(fScale),
