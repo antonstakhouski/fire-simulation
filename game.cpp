@@ -12,10 +12,10 @@
 #include <iostream>
 
 // TODO: replace this hack
-#define ENERGY 500.0f
-#define RADIUS 3.0f
-#define N_PARTICLES 5000 * 1.50
-#define N_BURST_RATE 300 * 0.75
+#define ENERGY 1500.0f
+#define RADIUS 1.0f
+#define N_PARTICLES 5000 * 0.5
+#define N_BURST_RATE 300 * 0.2
 
 // FPSMeter {{{
 FPSMeter::FPSMeter()
